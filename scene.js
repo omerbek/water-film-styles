@@ -6,6 +6,15 @@ const mint = '#9ef4dc';
 const amber = '#ffcb7d';
 const ink = '#152129';
 const duration = 8;
+const controls = [...document.querySelectorAll('#settings input')];
+const settings = Object.fromEntries(controls.map(input => [
+  input.id, input.type === 'number' ? Number(input.value) : input.value
+]));
+controls.forEach(input => input.addEventListener('input', () => {
+  if (input.type === 'number' && (input.value === '' || !input.validity.valid)) return;
+  settings[input.id] = input.type === 'number' ? input.valueAsNumber : input.value;
+  draw();
+}));
 
 function rect(x, y, w, h, color) {
   ctx.fillStyle = color;
@@ -36,10 +45,10 @@ function dot(x, y, radius, color = mint) {
 const range = length => Array.from({length}, (_, index) => index);
 
 function render(t) {
-  const i = Math.min(2, Math.floor(t / 2.67));
+  const i = settings.style ? settings.style - 1 : Math.min(2, Math.floor(t / 2.67));
   rect(42, 85, 636, 255, ['#172b47', '#5a3730', '#204e47'][i]);
   dot(480 + 18 * t, 155, [27, 48, 35][i], ['#a8ccfb', '#ffbb76', '#d5fbac'][i]);
-  [280, 305, 325].forEach((y, j) => line(range(32).map(k => [42 + k * 20, y + Math.sin(k * .3 + t) * (4 + j)]), mint, 2));
+  [280, 305, 325].forEach((y, j) => line(range(32).map(k => [42 + k * 20, y + Math.sin(k * .3 + t) * (settings.wave + j)]), mint, 2));
   label(['Mavi saat', 'Bakır günbatımı', 'Yeşil şafak'][i], 58, 123, 20);
 }
 
@@ -81,6 +90,13 @@ play.addEventListener('click', () => {
 seek.addEventListener('input', () => {
   position = Number(seek.value);
   draw();
+});
+
+document.querySelector('#save').addEventListener('click', () => {
+  const link = document.createElement('a');
+  link.download = 'water-film-styles.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
 });
 
 draw();
